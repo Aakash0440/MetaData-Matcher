@@ -1,0 +1,1505 @@
+generated_at: '2026-11-01T21:43:06'
+source_database: dbname=energy_grants
+entities:
+- name: Application
+  table: app
+  description: Holds one row per grant application in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: app_id
+    name: Application ID
+    description: Application ID recorded for each grant application record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Application ID
+    confidence: 0.991
+    status: approved
+  - column: dcsn_dt
+    name: Decision Date
+    description: Decision Date recorded for each grant application record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: Decision Date
+    confidence: 0.956
+    status: approved
+  - column: hh_id
+    name: Household ID
+    description: Household ID recorded for each grant application record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Household ID
+    confidence: 0.991
+    status: approved
+  - column: rsn_txt
+    name: Reason Text
+    description: Reason Text recorded for each grant application record.
+    semantic_type: free_text
+    personal_data: none
+    tags:
+    - free text
+    glossary_term: Reason Text
+    confidence: 0.956
+    status: approved
+  - column: schm_id
+    name: Scheme ID
+    description: Scheme ID recorded for each grant application record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Scheme ID
+    confidence: 0.991
+    status: approved
+  - column: sts_cd
+    name: Status Code
+    description: Status Code recorded for each grant application record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Status Code
+    confidence: 0.956
+    status: approved
+  - column: sub_dt
+    name: Submitted Date
+    description: Submitted Date recorded for each grant application record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: Submitted Date
+    confidence: 0.956
+    status: approved
+- name: EPC Certificate
+  table: epc_cert
+  description: Holds one row per epc certificate in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: assr_id
+    name: Assessor Staff ID
+    description: Assessor Staff ID recorded for each epc certificate record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Assessor Staff ID
+    confidence: 0.991
+    status: approved
+  - column: cert_id
+    name: Certificate ID
+    description: Certificate ID recorded for each epc certificate record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Certificate ID
+    confidence: 0.991
+    status: approved
+  - column: co2_tpy
+    name: CO2 Emissions (Tonnes per Year)
+    description: CO2 Emissions (Tonnes per Year) recorded for each epc certificate record.
+    semantic_type: measure
+    personal_data: none
+    tags:
+    - measure
+    glossary_term: CO2 Emissions (Tonnes per Year)
+    confidence: 0.956
+    status: approved
+  - column: curr_band
+    name: Current EPC Band
+    description: Current EPC Band recorded for each epc certificate record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Current EPC Band
+    confidence: 0.991
+    status: approved
+  - column: curr_scr
+    name: Current EPC Score
+    description: Current EPC Score recorded for each epc certificate record.
+    semantic_type: score
+    personal_data: none
+    tags:
+    - score
+    glossary_term: Current EPC Score
+    confidence: 0.991
+    status: approved
+  - column: lodg_dt
+    name: Lodged Date
+    description: Lodged Date recorded for each epc certificate record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: Lodged Date
+    confidence: 0.991
+    status: approved
+  - column: pot_band
+    name: Potential EPC Band
+    description: Potential EPC Band recorded for each epc certificate record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Potential EPC Band
+    confidence: 0.991
+    status: approved
+  - column: prop_id
+    name: Property ID
+    description: Property ID recorded for each epc certificate record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Property ID
+    confidence: 0.991
+    status: approved
+- name: Household
+  table: hh
+  description: Holds one row per household in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: hh_id
+    name: Household ID
+    description: Household ID recorded for each household record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Household ID
+    confidence: 0.991
+    status: approved
+  - column: hh_sz
+    name: Household Size
+    description: Household Size recorded for each household record.
+    semantic_type: count
+    personal_data: none
+    tags:
+    - count
+    glossary_term: Household Size
+    confidence: 0.956
+    status: approved
+  - column: inc_band_cd
+    name: Income Band Code
+    description: Income Band Code recorded for each household record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Income Band Code
+    confidence: 0.956
+    status: approved
+  - column: prop_id
+    name: Property ID
+    description: Property ID recorded for each household record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Property ID
+    confidence: 0.991
+    status: approved
+  - column: vuln_flg
+    name: Vulnerable Household Flag
+    description: Vulnerable Household Flag recorded for each household record.
+    semantic_type: flag
+    personal_data: none
+    tags:
+    - flag
+    glossary_term: Vulnerable Household Flag
+    confidence: 0.956
+    status: approved
+- name: Measure
+  table: msr
+  description: Holds one row per installed measure in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: app_id
+    name: Application ID
+    description: Application ID recorded for each installed measure record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Application ID
+    confidence: 0.991
+    status: approved
+  - column: contr_id
+    name: Contractor Organisation ID
+    description: Contractor Organisation ID recorded for each installed measure record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Contractor Organisation ID
+    confidence: 0.991
+    status: approved
+  - column: cost_amt
+    name: Cost Amount
+    description: Cost Amount recorded for each installed measure record.
+    semantic_type: money_gbp
+    personal_data: none
+    tags:
+    - money gbp
+    glossary_term: Cost Amount
+    confidence: 0.991
+    status: approved
+  - column: inst_dt
+    name: Installed Date
+    description: Installed Date recorded for each installed measure record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: Installed Date
+    confidence: 0.991
+    status: approved
+  - column: msr_id
+    name: Measure ID
+    description: Measure ID recorded for each installed measure record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Measure ID
+    confidence: 0.991
+    status: approved
+  - column: msr_typ_cd
+    name: Measure Type Code
+    description: Measure Type Code recorded for each installed measure record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Measure Type Code
+    confidence: 0.956
+    status: approved
+- name: Organisation
+  table: org
+  description: Holds one row per organisation in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: org_id
+    name: Organisation ID
+    description: Organisation ID recorded for each organisation record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Organisation ID
+    confidence: 0.991
+    status: approved
+  - column: org_nm
+    name: Organisation Name
+    description: Organisation Name recorded for each organisation record.
+    semantic_type: name
+    personal_data: none
+    tags:
+    - name
+    glossary_term: Organisation Name
+    confidence: 0.85
+    status: approved
+  - column: prnt_org_id
+    name: Parent Organisation ID
+    description: Parent Organisation ID recorded for each organisation record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Parent Organisation ID
+    confidence: 0.991
+    status: approved
+- name: Person
+  table: ppl
+  description: Holds one row per person in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: crt_ts
+    name: Created Timestamp
+    description: Created Timestamp recorded for each person record.
+    semantic_type: timestamp
+    personal_data: none
+    tags:
+    - timestamp
+    glossary_term: Created Timestamp
+    confidence: 0.991
+    status: approved
+  - column: dob
+    name: Date Of Birth
+    description: Date Of Birth recorded for each person record.
+    semantic_type: date
+    personal_data: quasi_identifier
+    tags:
+    - quasi identifier
+    - date
+    glossary_term: Date Of Birth
+    confidence: 0.991
+    status: approved
+  - column: email_addr
+    name: Email Address
+    description: Email Address recorded for each person record.
+    semantic_type: contact
+    personal_data: contact
+    tags:
+    - contact
+    - contact
+    glossary_term: Email Address
+    confidence: 0.991
+    status: approved
+  - column: fst_nm
+    name: First Name
+    description: First Name recorded for each person record.
+    semantic_type: name
+    personal_data: direct_identifier
+    tags:
+    - direct identifier
+    - name
+    glossary_term: First Name
+    confidence: 0.991
+    status: approved
+  - column: lst_nm
+    name: Last Name
+    description: Last Name recorded for each person record.
+    semantic_type: name
+    personal_data: direct_identifier
+    tags:
+    - direct identifier
+    - name
+    glossary_term: Last Name
+    confidence: 0.991
+    status: approved
+  - column: nino
+    name: National Insurance Number
+    description: National Insurance Number recorded for each person record.
+    semantic_type: identifier
+    personal_data: direct_identifier
+    tags:
+    - direct identifier
+    - identifier
+    glossary_term: National Insurance Number
+    confidence: 0.991
+    status: approved
+  - column: ph_no
+    name: Phone Number
+    description: Phone Number recorded for each person record.
+    semantic_type: contact
+    personal_data: contact
+    tags:
+    - contact
+    - contact
+    glossary_term: Phone Number
+    confidence: 0.991
+    status: approved
+  - column: ppl_id
+    name: Person ID
+    description: Person ID recorded for each person record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Person ID
+    confidence: 0.991
+    status: approved
+- name: Property
+  table: prop
+  description: Holds one row per property in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: addr_l1
+    name: Address Line 1
+    description: Address Line 1 recorded for each property record.
+    semantic_type: address
+    personal_data: address
+    tags:
+    - address
+    - address
+    glossary_term: Address Line 1
+    confidence: 0.991
+    status: approved
+  - column: addr_l2
+    name: Address Line 2
+    description: Address Line 2 recorded for each property record.
+    semantic_type: address
+    personal_data: address
+    tags:
+    - address
+    - address
+    glossary_term: Address Line 1
+    confidence: 0.991
+    status: approved
+  - column: la_org_id
+    name: Local Authority Organisation ID
+    description: Local Authority Organisation ID recorded for each property record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Local Authority Organisation ID
+    confidence: 0.991
+    status: approved
+  - column: pcode
+    name: Postcode
+    description: Postcode recorded for each property record.
+    semantic_type: address
+    personal_data: address
+    tags:
+    - address
+    - address
+    glossary_term: Postcode
+    confidence: 0.991
+    status: approved
+  - column: prop_id
+    name: Property ID
+    description: Property ID recorded for each property record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Property ID
+    confidence: 0.991
+    status: approved
+  - column: prop_typ_cd
+    name: Property Type Code
+    description: Property Type Code recorded for each property record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Property Type Code
+    confidence: 0.956
+    status: approved
+  - column: twn
+    name: Town
+    description: Town recorded for each property record.
+    semantic_type: address
+    personal_data: address
+    tags:
+    - address
+    - address
+    glossary_term: Town
+    confidence: 0.991
+    status: approved
+  - column: uprn
+    name: UPRN
+    description: UPRN recorded for each property record.
+    semantic_type: address
+    personal_data: address
+    tags:
+    - address
+    - address
+    glossary_term: UPRN
+    confidence: 0.991
+    status: approved
+  - column: yr_blt
+    name: Year Built
+    description: Year Built recorded for each property record.
+    semantic_type: year
+    personal_data: none
+    tags:
+    - year
+    glossary_term: Year Built
+    confidence: 0.991
+    status: approved
+- name: Payment
+  table: pymt
+  description: Holds one row per payment in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: app_id
+    name: Application ID
+    description: Application ID recorded for each payment record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Application ID
+    confidence: 0.991
+    status: approved
+  - column: bnk_ref
+    name: Bank Reference
+    description: Bank Reference recorded for each payment record.
+    semantic_type: identifier
+    personal_data: financial
+    tags:
+    - financial
+    - identifier
+    glossary_term: Bank Reference
+    confidence: 0.991
+    status: approved
+  - column: pyee_typ
+    name: Payee Type
+    description: Payee Type recorded for each payment record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Payee Type
+    confidence: 0.956
+    status: approved
+  - column: pymt_amt
+    name: Payment Amount
+    description: Payment Amount recorded for each payment record.
+    semantic_type: money_gbp
+    personal_data: none
+    tags:
+    - money gbp
+    glossary_term: Payment Amount
+    confidence: 0.991
+    status: approved
+  - column: pymt_dt
+    name: Payment Date
+    description: Payment Date recorded for each payment record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: Payment Date
+    confidence: 0.991
+    status: approved
+  - column: pymt_id
+    name: Payment ID
+    description: Payment ID recorded for each payment record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Payment ID
+    confidence: 0.991
+    status: approved
+- name: Grant Scheme
+  table: schm
+  description: Holds one row per grant scheme in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: end_dt
+    name: End Date
+    description: End Date recorded for each grant scheme record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: End Date
+    confidence: 0.991
+    status: approved
+  - column: fund_src
+    name: Funding Source
+    description: Funding Source recorded for each grant scheme record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Funding Source
+    confidence: 0.991
+    status: approved
+  - column: max_awd_amt
+    name: Maximum Award Amount
+    description: Maximum Award Amount recorded for each grant scheme record.
+    semantic_type: money_gbp
+    personal_data: none
+    tags:
+    - money gbp
+    glossary_term: Maximum Award Amount
+    confidence: 0.991
+    status: approved
+  - column: schm_id
+    name: Scheme ID
+    description: Scheme ID recorded for each grant scheme record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Scheme ID
+    confidence: 0.991
+    status: approved
+  - column: schm_nm
+    name: Scheme Name
+    description: Scheme Name recorded for each grant scheme record.
+    semantic_type: name
+    personal_data: none
+    tags:
+    - name
+    glossary_term: Scheme Name
+    confidence: 0.85
+    status: approved
+  - column: strt_dt
+    name: Start Date
+    description: Start Date recorded for each grant scheme record.
+    semantic_type: date
+    personal_data: none
+    tags:
+    - date
+    glossary_term: Start Date
+    confidence: 0.991
+    status: approved
+- name: Staff Member
+  table: stf
+  description: Holds one row per staff member in the home energy grant scheme.
+  confidence: 0.91
+  status: approved
+  attributes:
+  - column: fst_nm
+    name: First Name
+    description: First Name recorded for each staff member record.
+    semantic_type: name
+    personal_data: direct_identifier
+    tags:
+    - direct identifier
+    - name
+    glossary_term: First Name
+    confidence: 0.991
+    status: approved
+  - column: lst_nm
+    name: Last Name
+    description: Last Name recorded for each staff member record.
+    semantic_type: name
+    personal_data: direct_identifier
+    tags:
+    - direct identifier
+    - name
+    glossary_term: Last Name
+    confidence: 0.991
+    status: approved
+  - column: mgr_id
+    name: Manager Staff ID
+    description: Manager Staff ID recorded for each staff member record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Manager Staff ID
+    confidence: 0.991
+    status: approved
+  - column: org_id
+    name: Organisation ID
+    description: Organisation ID recorded for each staff member record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Organisation ID
+    confidence: 0.991
+    status: approved
+  - column: role_cd
+    name: Role Code
+    description: Role Code recorded for each staff member record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Role Code
+    confidence: 0.956
+    status: approved
+  - column: stf_id
+    name: Staff ID
+    description: Staff ID recorded for each staff member record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Staff ID
+    confidence: 0.991
+    status: approved
+reference_data:
+- name: Reference Data
+  table: ref_cd
+  description: Holds one row per reference code in the home energy grant scheme.
+  confidence: 0.97
+  status: approved
+  attributes: []
+audit:
+- name: Audit Log
+  table: aud_log
+  description: Holds one row per audit log in the home energy grant scheme.
+  confidence: 0.97
+  status: approved
+  attributes:
+  - column: act
+    name: Action
+    description: Action recorded for each audit log record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Action
+    confidence: 0.956
+    status: approved
+  - column: act_ts
+    name: Action Timestamp
+    description: Action Timestamp recorded for each audit log record.
+    semantic_type: timestamp
+    personal_data: none
+    tags:
+    - timestamp
+    glossary_term: Action Timestamp
+    confidence: 0.956
+    status: approved
+  - column: chg_json
+    name: Change JSON
+    description: Change JSON recorded for each audit log record.
+    semantic_type: json
+    personal_data: none
+    tags:
+    - json
+    glossary_term: Change JSON
+    confidence: 0.956
+    status: approved
+  - column: log_id
+    name: Log ID
+    description: Log ID recorded for each audit log record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Log ID
+    confidence: 0.991
+    status: approved
+  - column: rec_id
+    name: Record ID
+    description: Record ID recorded for each audit log record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Record ID
+    confidence: 0.956
+    status: approved
+relationships:
+- name: app.hh_id->hh.hh_id
+  type: declared
+  from: app.hh_id
+  to: hh.hh_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: app_hh_id_fkey
+- name: app.schm_id->schm.schm_id
+  type: declared
+  from: app.schm_id
+  to: schm.schm_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: app_schm_id_fkey
+- name: aud_log.rec_id->*.pk via aud_log.tbl_nm
+  type: polymorphic
+  from: aud_log.rec_id
+  to: '*.pk'
+  cardinality: many-to-one
+  confidence: 0.9
+  status: approved
+  evidence:
+    type_column: tbl_nm
+    targets:
+    - app
+    - hh
+    - msr
+    - pymt
+- name: epc_cert.prop_id->prop.prop_id
+  type: declared
+  from: epc_cert.prop_id
+  to: prop.prop_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: epc_cert_prop_id_fkey
+- name: hh.hh_id<->ppl.ppl_id via hh_mbr
+  type: link
+  from: hh.hh_id
+  to: ppl.ppl_id
+  cardinality: many-to-many
+  confidence: 0.95
+  status: approved
+  evidence:
+    via: hh_mbr
+    link_columns:
+    - hh_id
+    - ppl_id
+  via_table: hh_mbr
+  attributes:
+  - column: hh_id
+    name: Household ID
+    description: Household ID recorded for each household member record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Household ID
+    confidence: 0.991
+    status: approved
+  - column: is_lead
+    name: Is Lead
+    description: Is Lead recorded for each household member record.
+    semantic_type: flag
+    personal_data: none
+    tags:
+    - flag
+    glossary_term: Is Lead
+    confidence: 0.991
+    status: approved
+  - column: ppl_id
+    name: Person ID
+    description: Person ID recorded for each household member record.
+    semantic_type: identifier
+    personal_data: none
+    tags:
+    - identifier
+    glossary_term: Person ID
+    confidence: 0.991
+    status: approved
+  - column: rel_cd
+    name: Relationship Code
+    description: Relationship Code recorded for each household member record.
+    semantic_type: code
+    personal_data: none
+    tags:
+    - code
+    glossary_term: Relationship Code
+    confidence: 0.956
+    status: approved
+- name: hh.prop_id->prop.prop_id
+  type: declared
+  from: hh.prop_id
+  to: prop.prop_id
+  cardinality: one-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: hh_prop_id_fkey
+- name: hh_mbr.hh_id->hh.hh_id
+  type: declared
+  from: hh_mbr.hh_id
+  to: hh.hh_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: hh_mbr_hh_id_fkey
+- name: hh_mbr.ppl_id->ppl.ppl_id
+  type: declared
+  from: hh_mbr.ppl_id
+  to: ppl.ppl_id
+  cardinality: one-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: hh_mbr_ppl_id_fkey
+- name: msr.app_id->app.app_id
+  type: declared
+  from: msr.app_id
+  to: app.app_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: msr_app_id_fkey
+- name: org.prnt_org_id->org.org_id
+  type: declared
+  from: org.prnt_org_id
+  to: org.org_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: org_prnt_org_id_fkey
+- name: prop.la_org_id->org.org_id
+  type: declared
+  from: prop.la_org_id
+  to: org.org_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: prop_la_org_id_fkey
+- name: pymt.app_id->app.app_id
+  type: declared
+  from: pymt.app_id
+  to: app.app_id
+  cardinality: many-to-one
+  confidence: 1.0
+  status: approved
+  evidence:
+    constraint: pymt_app_id_fkey
+- name: stf.org_id->org.org_id
+  type: inferred
+  from: stf.org_id
+  to: org.org_id
+  cardinality: many-to-one
+  confidence: 0.97
+  status: approved
+  evidence:
+    containment: 1.0
+    child_distinct: 17
+    matched: 17
+    parent_coverage: 0.34
+    name_score: 1.0
+    rivals: []
+glossary:
+- term: Action
+  definition: Action as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - aud_log.act
+  confidence: 0.974
+  status: approved
+- term: Action Timestamp
+  definition: Action Timestamp as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - aud_log.act_ts
+  confidence: 0.974
+  status: approved
+- term: Address Line 1
+  definition: Address Line 1 as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.addr_l1
+  - prop.addr_l2
+  confidence: 0.895
+  status: approved
+- term: Application ID
+  definition: Application ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.app_id
+  - msr.app_id
+  - pymt.app_id
+  confidence: 0.995
+  status: approved
+- term: Assessor Staff ID
+  definition: Assessor Staff ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.assr_id
+  confidence: 0.995
+  status: approved
+- term: Bank Reference
+  definition: Bank Reference as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - pymt.bnk_ref
+  confidence: 0.995
+  status: approved
+- term: CO2 Emissions (Tonnes per Year)
+  definition: CO2 Emissions (Tonnes per Year) as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.co2_tpy
+  confidence: 0.974
+  status: approved
+- term: Certificate ID
+  definition: Certificate ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.cert_id
+  confidence: 0.995
+  status: approved
+- term: Change JSON
+  definition: Change JSON as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - aud_log.chg_json
+  confidence: 0.974
+  status: approved
+- term: Code
+  definition: Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ref_cd.cd
+  confidence: 0.867
+  status: approved
+- term: Code Description
+  definition: Code Description as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ref_cd.cd_desc
+  confidence: 0.867
+  status: approved
+- term: Code Group
+  definition: Code Group as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ref_cd.cd_grp
+  confidence: 0.867
+  status: approved
+- term: Contractor Organisation ID
+  definition: Contractor Organisation ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - msr.contr_id
+  confidence: 0.995
+  status: approved
+- term: Cost Amount
+  definition: Cost Amount as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - msr.cost_amt
+  confidence: 0.995
+  status: approved
+- term: Created Timestamp
+  definition: Created Timestamp as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.crt_ts
+  confidence: 0.995
+  status: approved
+- term: Current EPC Band
+  definition: Current EPC Band as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.curr_band
+  confidence: 0.995
+  status: approved
+- term: Current EPC Score
+  definition: Current EPC Score as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.curr_scr
+  confidence: 0.995
+  status: approved
+- term: Date Of Birth
+  definition: Date Of Birth as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.dob
+  confidence: 0.995
+  status: approved
+- term: Decision Date
+  definition: Decision Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.dcsn_dt
+  confidence: 0.974
+  status: approved
+- term: Email Address
+  definition: Email Address as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.email_addr
+  confidence: 0.995
+  status: approved
+- term: End Date
+  definition: End Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - schm.end_dt
+  confidence: 0.995
+  status: approved
+- term: First Name
+  definition: First Name as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.fst_nm
+  - stf.fst_nm
+  confidence: 0.995
+  status: approved
+- term: Funding Source
+  definition: Funding Source as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - schm.fund_src
+  confidence: 0.995
+  status: approved
+- term: Household ID
+  definition: Household ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.hh_id
+  - hh.hh_id
+  - hh_mbr.hh_id
+  confidence: 0.995
+  status: approved
+- term: Household Size
+  definition: Household Size as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - hh.hh_sz
+  confidence: 0.974
+  status: approved
+- term: Income Band Code
+  definition: Income Band Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - hh.inc_band_cd
+  confidence: 0.974
+  status: approved
+- term: Installed Date
+  definition: Installed Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - msr.inst_dt
+  confidence: 0.995
+  status: approved
+- term: Is Lead
+  definition: Is Lead as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - hh_mbr.is_lead
+  confidence: 0.995
+  status: approved
+- term: Last Name
+  definition: Last Name as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.lst_nm
+  - stf.lst_nm
+  confidence: 0.995
+  status: approved
+- term: Local Authority Organisation ID
+  definition: Local Authority Organisation ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.la_org_id
+  confidence: 0.995
+  status: approved
+- term: Lodged Date
+  definition: Lodged Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.lodg_dt
+  confidence: 0.995
+  status: approved
+- term: Log ID
+  definition: Log ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - aud_log.log_id
+  confidence: 0.995
+  status: approved
+- term: Manager Staff ID
+  definition: Manager Staff ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - stf.mgr_id
+  confidence: 0.995
+  status: approved
+- term: Maximum Award Amount
+  definition: Maximum Award Amount as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - schm.max_awd_amt
+  confidence: 0.995
+  status: approved
+- term: Measure ID
+  definition: Measure ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - msr.msr_id
+  confidence: 0.995
+  status: approved
+- term: Measure Type Code
+  definition: Measure Type Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - msr.msr_typ_cd
+  confidence: 0.974
+  status: approved
+- term: National Insurance Number
+  definition: National Insurance Number as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.nino
+  confidence: 0.995
+  status: approved
+- term: Organisation ID
+  definition: Organisation ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - org.org_id
+  - stf.org_id
+  confidence: 0.995
+  status: approved
+- term: Organisation Name
+  definition: Organisation Name as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - org.org_nm
+  confidence: 0.91
+  status: approved
+- term: Organisation Type
+  definition: Organisation Type as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - org.org_typ
+  confidence: 0.867
+  status: approved
+- term: Parent Organisation ID
+  definition: Parent Organisation ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - org.prnt_org_id
+  confidence: 0.995
+  status: approved
+- term: Payee Type
+  definition: Payee Type as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - pymt.pyee_typ
+  confidence: 0.974
+  status: approved
+- term: Payment Amount
+  definition: Payment Amount as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - pymt.pymt_amt
+  confidence: 0.995
+  status: approved
+- term: Payment Date
+  definition: Payment Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - pymt.pymt_dt
+  confidence: 0.995
+  status: approved
+- term: Payment ID
+  definition: Payment ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - pymt.pymt_id
+  confidence: 0.995
+  status: approved
+- term: Person ID
+  definition: Person ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - hh_mbr.ppl_id
+  - ppl.ppl_id
+  confidence: 0.995
+  status: approved
+- term: Phone Number
+  definition: Phone Number as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - ppl.ph_no
+  confidence: 0.995
+  status: approved
+- term: Postcode
+  definition: Postcode as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.pcode
+  confidence: 0.995
+  status: approved
+- term: Potential EPC Band
+  definition: Potential EPC Band as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.pot_band
+  confidence: 0.995
+  status: approved
+- term: Property ID
+  definition: Property ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - epc_cert.prop_id
+  - hh.prop_id
+  - prop.prop_id
+  confidence: 0.995
+  status: approved
+- term: Property Type Code
+  definition: Property Type Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.prop_typ_cd
+  confidence: 0.974
+  status: approved
+- term: Reason Text
+  definition: Reason Text as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.rsn_txt
+  confidence: 0.974
+  status: approved
+- term: Record ID
+  definition: Record ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - aud_log.rec_id
+  confidence: 0.974
+  status: approved
+- term: Relationship Code
+  definition: Relationship Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - hh_mbr.rel_cd
+  confidence: 0.974
+  status: approved
+- term: Role Code
+  definition: Role Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - stf.role_cd
+  confidence: 0.974
+  status: approved
+- term: Scheme ID
+  definition: Scheme ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.schm_id
+  - schm.schm_id
+  confidence: 0.995
+  status: approved
+- term: Scheme Name
+  definition: Scheme Name as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - schm.schm_nm
+  confidence: 0.91
+  status: approved
+- term: Staff ID
+  definition: Staff ID as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - stf.stf_id
+  confidence: 0.995
+  status: approved
+- term: Start Date
+  definition: Start Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - schm.strt_dt
+  confidence: 0.995
+  status: approved
+- term: Status Code
+  definition: Status Code as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.sts_cd
+  confidence: 0.974
+  status: approved
+- term: Submitted Date
+  definition: Submitted Date as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - app.sub_dt
+  confidence: 0.974
+  status: approved
+- term: Table Name
+  definition: Table Name as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - aud_log.tbl_nm
+  confidence: 0.889
+  status: approved
+- term: Town
+  definition: Town as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.twn
+  confidence: 0.995
+  status: approved
+- term: UPRN
+  definition: UPRN as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.uprn
+  confidence: 0.995
+  status: approved
+- term: Vulnerable Household Flag
+  definition: Vulnerable Household Flag as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - hh.vuln_flg
+  confidence: 0.974
+  status: approved
+- term: Year Built
+  definition: Year Built as used across the grant scheme.
+  synonyms: []
+  mapped_columns:
+  - prop.yr_blt
+  confidence: 0.995
+  status: approved
+metrics:
+- name: Applications approved
+  description: Number of applications with status Approved.
+  sql: SELECT COUNT(*) AS value FROM "app" AS m WHERE m."sts_cd" = 'APR'
+  sql_by_dimensions: SELECT j1."schm_nm" AS "Scheme", j4."org_nm" AS "Local authority", COUNT(*) AS value FROM "app"
+    AS m JOIN "schm" AS j1 ON m."schm_id" = j1."schm_id" JOIN "hh" AS j2 ON m."hh_id" = j2."hh_id" JOIN "prop" AS
+    j3 ON j2."prop_id" = j3."prop_id" JOIN "org" AS j4 ON j3."la_org_id" = j4."org_id" WHERE m."sts_cd" = 'APR'
+    GROUP BY 1, 2 ORDER BY value DESC NULLS LAST LIMIT 100
+  dimensions:
+  - Scheme
+  - Local authority
+  depends_on:
+  - app.schm_id->schm.schm_id
+  - app.hh_id->hh.hh_id
+  - hh.prop_id->prop.prop_id
+  - prop.la_org_id->org.org_id
+  result_when_approved: 169.0
+  confidence: 0.97
+  status: approved
+- name: Average EPC score improvement
+  description: Average change in EPC score between a property's first and latest certificate.
+  sql: SELECT AVG(m."delta") AS value FROM (SELECT x."prop_id" AS "prop_id", (array_agg(x."curr_scr" ORDER BY x."lodg_dt"
+    DESC, x."cert_id" DESC))[1] - (array_agg(x."curr_scr" ORDER BY x."lodg_dt" ASC, x."cert_id" ASC))[1] AS delta
+    FROM "epc_cert" AS x WHERE x."curr_scr" IS NOT NULL AND x."lodg_dt" IS NOT NULL AND x."prop_id" IS NOT NULL
+    GROUP BY x."prop_id" HAVING COUNT(*) > 1) AS m
+  sql_by_dimensions: SELECT j2."org_nm" AS "Local authority", AVG(m."delta") AS value FROM (SELECT x."prop_id" AS
+    "prop_id", (array_agg(x."curr_scr" ORDER BY x."lodg_dt" DESC, x."cert_id" DESC))[1] - (array_agg(x."curr_scr"
+    ORDER BY x."lodg_dt" ASC, x."cert_id" ASC))[1] AS delta FROM "epc_cert" AS x WHERE x."curr_scr" IS NOT NULL
+    AND x."lodg_dt" IS NOT NULL AND x."prop_id" IS NOT NULL GROUP BY x."prop_id" HAVING COUNT(*) > 1) AS m JOIN
+    "prop" AS j1 ON m."prop_id" = j1."prop_id" JOIN "org" AS j2 ON j1."la_org_id" = j2."org_id" GROUP BY 1 ORDER
+    BY value DESC NULLS LAST LIMIT 100
+  dimensions:
+  - Local authority
+  depends_on:
+  - epc_cert.prop_id->prop.prop_id
+  - prop.la_org_id->org.org_id
+  result_when_approved: 14.876923076923077
+  confidence: 0.95
+  status: approved
+- name: Average measure cost
+  description: Average installed cost of a measure.
+  sql: SELECT AVG(m."cost_amt") AS value FROM "msr" AS m
+  sql_by_dimensions: SELECT j2."schm_nm" AS "Scheme", m."msr_typ_cd" AS "Measure type", AVG(m."cost_amt") AS value
+    FROM "msr" AS m JOIN "app" AS j1 ON m."app_id" = j1."app_id" JOIN "schm" AS j2 ON j1."schm_id" = j2."schm_id"
+    GROUP BY 1, 2 ORDER BY value DESC NULLS LAST LIMIT 100
+  dimensions:
+  - Scheme
+  - Measure type
+  depends_on:
+  - msr.app_id->app.app_id
+  - app.schm_id->schm.schm_id
+  result_when_approved: 7071.704978723405
+  confidence: 0.98
+  status: approved
+- name: Total grant paid
+  description: Sum of all payments made against applications.
+  sql: SELECT SUM(m."pymt_amt") AS value FROM "pymt" AS m
+  sql_by_dimensions: SELECT j2."schm_nm" AS "Scheme", j5."org_nm" AS "Local authority", SUM(m."pymt_amt") AS value
+    FROM "pymt" AS m JOIN "app" AS j1 ON m."app_id" = j1."app_id" JOIN "schm" AS j2 ON j1."schm_id" = j2."schm_id"
+    JOIN "hh" AS j3 ON j1."hh_id" = j3."hh_id" JOIN "prop" AS j4 ON j3."prop_id" = j4."prop_id" JOIN "org" AS j5
+    ON j4."la_org_id" = j5."org_id" GROUP BY 1, 2 ORDER BY value DESC NULLS LAST LIMIT 100
+  dimensions:
+  - Scheme
+  - Local authority
+  depends_on:
+  - pymt.app_id->app.app_id
+  - app.schm_id->schm.schm_id
+  - app.hh_id->hh.hh_id
+  - hh.prop_id->prop.prop_id
+  - prop.la_org_id->org.org_id
+  result_when_approved: 1583180.33
+  confidence: 0.975
+  status: approved
+warnings:
+- relationship hh_mbr.hh_id->hh.hh_id touches table hh_mbr, which is not approved
+- relationship hh_mbr.ppl_id->ppl.ppl_id touches table hh_mbr, which is not approved

@@ -1,0 +1,9 @@
+psycopg2-binary>=2.9
+pydantic>=2.6
+pyyaml>=6.0
+streamlit>=1.40
+pandas>=2.0
+pytest>=8.0
+# optional, only for real LLM providers:
+# boto3>=1.34        (MM_PROVIDER=bedrock)
+# anthropic>=0.40    (MM_PROVIDER=anthropic)
