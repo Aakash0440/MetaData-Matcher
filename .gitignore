@@ -1,13 +1,21 @@
 @"
-
-# Python virtual environments
+# Virtual environments
 .venv/
 venv/
 env/
-ENV/
 
-# Python cache
+# Python cache and compiled files
 __pycache__/
 *.py[cod]
+*$py.class
+
+# Test and tooling cache
 .pytest_cache/
-"@ | Add-Content .gitignore
+.mypy_cache/
+.ruff_cache/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+"@ | Set-Content .gitignore
