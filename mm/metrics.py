@@ -12,6 +12,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from mm import config
+from mm.connectors.base import POSTGRES
 from mm.harvest import Table
 from mm.llm import Gateway, extract_json
 
@@ -68,8 +69,8 @@ class Compiled:
     errors: list = field(default_factory=list)
 
 
-def q(name: str) -> str:
-    return '"' + name.replace('"', '""') + '"'
+def q(name: str, dialect=None) -> str:
+    return (dialect or POSTGRES).q(name)
 
 
 def slug(name: str) -> str:
@@ -154,7 +155,9 @@ def validate_spec(spec: MetricSpec, tables: dict[str, Table]) -> list[str]:
 
 
 def compile_metric(spec: MetricSpec, tables: dict[str, Table], rels: list[dict],
-                   dims: list[DimSpec] | None = None) -> Compiled:
+                   dims: list[DimSpec] | None = None, dialect=None) -> Compiled:
+    D = dialect or POSTGRES
+    Q = D.q
     c = Compiled()
     c.errors = validate_spec(spec, tables)
     if c.errors:
@@ -165,25 +168,30 @@ def compile_metric(spec: MetricSpec, tables: dict[str, Table], rels: list[dict],
     base_table = spec.partition_by.table if delta else m.table
     if delta:
         t, pc, mc, oc = tables[base_table], spec.partition_by.column, m.column, spec.order_by.column
-        tie_d = f", x.{q(t.pk[0])} DESC" if t.pk else ""
-        tie_a = f", x.{q(t.pk[0])} ASC" if t.pk else ""
-        from_sql = (f"(SELECT x.{q(pc)} AS {q(pc)}, (array_agg(x.{q(mc)} ORDER BY x.{q(oc)} DESC{tie_d}))[1] - "
-                    f"(array_agg(x.{q(mc)} ORDER BY x.{q(oc)} ASC{tie_a}))[1] AS delta FROM {q(base_table)} AS x "
-                    f"WHERE x.{q(mc)} IS NOT NULL AND x.{q(oc)} IS NOT NULL AND x.{q(pc)} IS NOT NULL "
-                    f"GROUP BY x.{q(pc)} HAVING COUNT(*) > 1) AS m")
-        expr = 'AVG(m."delta")'
+        tie_d = f", x.{Q(t.pk[0])} DESC" if t.pk else ""
+        tie_a = f", x.{Q(t.pk[0])} ASC" if t.pk else ""
+        from_sql = (f"(SELECT r.{Q(pc)} AS {Q(pc)}, MAX(CASE WHEN r.rn_last = 1 THEN r.val END) - "
+                    f"MAX(CASE WHEN r.rn_first = 1 THEN r.val END) AS delta "
+                    f"FROM (SELECT x.{Q(pc)} AS {Q(pc)}, x.{Q(mc)} AS val, "
+                    f"ROW_NUMBER() OVER (PARTITION BY x.{Q(pc)} ORDER BY x.{Q(oc)} DESC{tie_d}) AS rn_last, "
+                    f"ROW_NUMBER() OVER (PARTITION BY x.{Q(pc)} ORDER BY x.{Q(oc)} ASC{tie_a}) AS rn_first, "
+                    f"COUNT(*) OVER (PARTITION BY x.{Q(pc)}) AS cnt "
+                    f"FROM {Q(base_table)} AS x WHERE x.{Q(mc)} IS NOT NULL AND x.{Q(oc)} IS NOT NULL "
+                    f"AND x.{Q(pc)} IS NOT NULL) r WHERE r.cnt > 1 GROUP BY r.{Q(pc)}) AS m")
+        expr = f"AVG(m.{Q('delta')})"
     else:
-        from_sql = f"{q(base_table)} AS m"
-        col = f"m.{q(m.column)}" if m.column else "*"
+        from_sql = f"{Q(base_table)} AS m"
+        col = f"m.{Q(m.column)}" if m.column else "*"
         expr = {"sum": f"SUM({col})", "avg": f"AVG({col})", "min": f"MIN({col})", "max": f"MAX({col})",
                 "count": f"COUNT({col})", "count_distinct": f"COUNT(DISTINCT {col})"}[spec.agg]
     where = []
     for f in spec.filters:
         if f.op == "in":
-            where.append(f"m.{q(f.column)} = ANY(%s)")
-            params.append(list(f.value) if isinstance(f.value, list) else [f.value])
+            vals = list(f.value) if isinstance(f.value, list) else [f.value]
+            where.append(f"m.{Q(f.column)} IN {D.in_list(len(vals))}")
+            params.extend(vals)
         else:
-            where.append(f"m.{q(f.column)} {f.op} %s")
+            where.append(f"m.{Q(f.column)} {f.op} %s")
             params.append(f.value)
     where_sql = (" WHERE " + " AND ".join(where)) if where else ""
     c.sql_total = f"SELECT {expr} AS value FROM {from_sql}{where_sql}"
@@ -205,7 +213,7 @@ def compile_metric(spec: MetricSpec, tables: dict[str, Table], rels: list[dict],
             k = (cur, r["key"])
             if k not in aliases:
                 aliases[k] = f"j{len(aliases) + 1}"
-                joins.append(f"JOIN {q(r['to_table'])} AS {aliases[k]} ON {cur}.{q(r['from_column'])} = {aliases[k]}.{q(r['to_column'])}")
+                joins.append(f"JOIN {Q(r['to_table'])} AS {aliases[k]} ON {cur}.{Q(r['from_column'])} = {aliases[k]}.{Q(r['to_column'])}")
             cur = aliases[k]
             if r["key"] not in deps:
                 deps.append(r["key"])
@@ -213,29 +221,23 @@ def compile_metric(spec: MetricSpec, tables: dict[str, Table], rels: list[dict],
             c.errors.append(f"dimension '{d.name}': only {base_table}.{spec.partition_by.column} is available on the base")
             continue
         label = re.sub(r"[^A-Za-z0-9 _-]", "", d.name)
-        selects.append(f"{cur}.{q(d.column)} AS {q(label)}")
+        selects.append(f"{cur}.{Q(d.column)} AS {Q(label)}")
     c.deps = deps
     if selects and not c.errors:
         n = len(selects)
         c.sql_dims = (f"SELECT {', '.join(selects)}, {expr} AS value FROM {from_sql} {' '.join(joins)}{where_sql} "
-                      f"GROUP BY {', '.join(str(i + 1) for i in range(n))} ORDER BY value DESC NULLS LAST LIMIT 100")
+                      f"GROUP BY {', '.join(str(i + 1) for i in range(n))} ORDER BY {D.order_desc_nulls_last(expr)} LIMIT 100")
     c.params = params
     return c
 
 
 def run_sql(conn, sql: str, params: list):
-    cur = conn.cursor()
-    try:
-        cur.execute("SET LOCAL statement_timeout = '5s'")
-        cur.execute(sql, params)
-        cols = [d[0] for d in cur.description]
-        return cols, cur.fetchall()
-    finally:
-        conn.rollback()
+    """Run on a connector: read-only, 5 second timeout. Returns (column names, rows)."""
+    return conn.run(sql, params)
 
 
 def literal(conn, sql: str, params: list) -> str:
-    return conn.cursor().mogrify(sql, params).decode()
+    return conn.literal(sql, params)
 
 
 def ground_filters(conn, spec: MetricSpec) -> list[str]:
@@ -243,8 +245,10 @@ def ground_filters(conn, spec: MetricSpec) -> list[str]:
     for f in spec.filters:
         if f.op in ("=", "in", "!="):
             vals = [str(v) for v in (f.value if isinstance(f.value, list) else [f.value])]
-            _, rows = run_sql(conn, f"SELECT DISTINCT {q(f.column)}::text FROM {q(spec.measure.table)} WHERE {q(f.column)}::text = ANY(%s)", [vals])
-            missing = set(vals) - {r[0].strip() for r in rows}
+            d = conn.dialect
+            col = d.text(d.q(f.column))
+            _, rows = run_sql(conn, f"SELECT DISTINCT {col} FROM {d.q(spec.measure.table)} WHERE {col} IN {d.in_list(len(vals))}", vals)
+            missing = set(vals) - {str(r[0]).strip() for r in rows}
             if missing:
                 errs.append(f"filter value(s) {sorted(missing)} never occur in {spec.measure.table}.{f.column}")
     return errs
@@ -254,7 +258,7 @@ def evaluate(conn, spec: MetricSpec, tables: dict[str, Table], rels: list[dict])
     """Validate, compile and EXECUTE. Returns the payload stored on the metric item."""
     out = {"spec": spec.model_dump(by_alias=True), "sql_total": "", "sql_dims": "", "result_value": None,
            "deps": [], "dims_checked": 0, "grounded": True, "error": None}
-    comp = compile_metric(spec, tables, rels)
+    comp = compile_metric(spec, tables, rels, dialect=conn.dialect)
     if comp.errors:
         out["error"] = "; ".join(comp.errors)
         return out
@@ -272,7 +276,7 @@ def evaluate(conn, spec: MetricSpec, tables: dict[str, Table], rels: list[dict])
         out["sql_total"] = literal(conn, comp.sql_total, comp.params)
         ok = 0
         for d in spec.dimensions:
-            one = compile_metric(spec, tables, rels, [d])
+            one = compile_metric(spec, tables, rels, [d], dialect=conn.dialect)
             if one.errors:
                 out["error"] = "; ".join(one.errors)
                 return out
@@ -283,7 +287,6 @@ def evaluate(conn, spec: MetricSpec, tables: dict[str, Table], rels: list[dict])
             out["sql_dims"] = literal(conn, comp.sql_dims, comp.params)
         out["deps"] = comp.deps
     except Exception as e:                                    # SQL errors become validation errors
-        conn.rollback()
         out["error"] = f"SQL failed: {str(e).splitlines()[0][:200]}"
     return out
 

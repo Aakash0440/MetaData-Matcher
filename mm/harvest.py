@@ -41,13 +41,13 @@ class Table:
 
 def family(data_type: str) -> str:
     d = data_type.lower()
-    if d in ("integer", "smallint", "bigint", "int", "int4", "int2", "int8"):
+    if d in ("integer", "smallint", "bigint", "int", "int4", "int2", "int8", "tinyint", "mediumint"):
         return "int"
-    if d.startswith(("numeric", "decimal", "real", "double")):
+    if d.startswith(("numeric", "decimal", "real", "double", "float")):
         return "num"
     if d == "date":
         return "date"
-    if d.startswith("timestamp"):
+    if d.startswith(("timestamp", "datetime")):
         return "ts"
     if d == "boolean":
         return "bool"

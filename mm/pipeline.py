@@ -2,15 +2,13 @@
 import hashlib
 import json
 
-from mm import db, glossary
+from mm import connectors, glossary
 from mm.abbreviations import title
 from mm.confidence import column_confidence, table_confidence
 from mm.entities import table_kind_rule
 from mm.generate import generate_table
-from mm.harvest import harvest
 from mm.llm import Gateway, LLMProvider
 from mm.metrics import propose_metrics
-from mm.profile import profile_table
 from mm.relationships import declared_relationships, infer_relationships, link_relationships, polymorphic_relationships
 from mm.store import Store
 
@@ -96,18 +94,40 @@ def process_table(store, gw, tables, profiles, t, resolver, consistency, scan_id
     return 1
 
 
-def scan(store: Store, provider: LLMProvider, consistency: int = 1, log=print) -> dict:
+def bronze(store: Store, conn, log=print):
+    """Bronze tier: harvest the catalogue and profile every column. No LLM involved."""
+    log("harvesting catalogue ...")
+    tables = conn.harvest()
+    log("profiling columns ...")
+    profiles = {n: conn.profile_table(t) for n, t in tables.items()}
+    for n, t in tables.items():
+        for c in t.columns:
+            store.put_evidence(f"{n}.{c.name}", profiles[n][c.name].public())
+        store.put_evidence(f"table:{n}", {"row_count": t.row_count, "columns": [c.name for c in t.columns], "pk": t.pk,
+                                          "fks": [f"{f.column}->{f.ref_table}.{f.ref_column}" for f in t.fks]})
+    return tables, profiles
+
+
+def harvest_only(store: Store, log=print, source_url: str | None = None) -> dict:
+    """`python -m mm harvest`: Bronze only. Recorded in scan history with provider 'bronze'."""
+    scan_id = store.start_scan("bronze", "no-llm")
+    conn = connectors.connect(source_url)
+    try:
+        tables, _ = bronze(store, conn, log)
+        summary = {"tables": len(tables), "columns": sum(len(t.columns) for t in tables.values()),
+                   "rows": sum(t.row_count for t in tables.values()), "calls": 0, "source": conn.name}
+        store.finish_scan(scan_id, "done", summary)
+        return summary
+    finally:
+        conn.close()
+
+
+def scan(store: Store, provider: LLMProvider, consistency: int = 1, log=print, source_url: str | None = None) -> dict:
     scan_id = store.start_scan(provider.name, provider.model)
     gw = Gateway(provider, store, scan_id)
-    conn = db.readonly_connect()
+    conn = connectors.connect(source_url)
     try:
-        log("harvesting catalogue ...")
-        tables = harvest(conn)
-        log("profiling columns ...")
-        profiles = {n: profile_table(conn, t) for n, t in tables.items()}
-        for n, t in tables.items():
-            for c in t.columns:
-                store.put_evidence(f"{n}.{c.name}", profiles[n][c.name].public())
+        tables, profiles = bronze(store, conn, log)
         existing = {i["key"]: i["payload"].get("synonyms", []) for i in store.items("glossary")
                     if i["status"] in ("approved", "edited")}
         resolver = glossary.Resolver(existing)
@@ -135,18 +155,16 @@ def scan(store: Store, provider: LLMProvider, consistency: int = 1, log=print) -
             rel_dicts = [{**i["payload"], "key": i["key"], "confidence": i["confidence"]} for i in store.items("relationship")
                          if i["status"] != "rejected" and i["payload"]["kind"] in ("declared", "inferred") and i["payload"]["to_table"] != "*"]
             ref_rows = []
-            cur = conn.cursor()
             for n, k in kinds.items():
                 if k == "reference":
-                    cur.execute(f'SELECT * FROM "{n}" LIMIT 200')
-                    ref_rows += cur.fetchall()
+                    ref_rows += conn.fetchall(f"SELECT * FROM {conn.dialect.q(n)} LIMIT 200")
             propose_metrics(gw, conn, tables, rel_dicts, ref_rows, store, scan_id, set())
             for m in store.items("metric", "suggested"):
                 if m["scan_id"] != scan_id:
                     store.delete("metric", m["key"])
         totals = store.call_totals(scan_id)
         summary = {"tables": len(tables), "columns": sum(len(t.columns) for t in tables.values()),
-                   "tables_sent_to_llm": regenerated, "terms": n_terms, "relationships": len(rels), **totals}
+                   "tables_sent_to_llm": regenerated, "terms": n_terms, "relationships": len(rels), "source": conn.name, **totals}
         store.finish_scan(scan_id, "done", summary)
         return summary
     except Exception as e:
@@ -156,18 +174,32 @@ def scan(store: Store, provider: LLMProvider, consistency: int = 1, log=print) -
         conn.close()
 
 
-def regenerate_column(store: Store, provider: LLMProvider, table: str, column: str) -> None:
-    scans = store.scans()
-    scan_id = scans[0]["id"] if scans else store.start_scan(provider.name, provider.model)
-    conn = db.readonly_connect()
+def regenerate_column(store: Store, provider: LLMProvider, table: str, column: str, source_url: str | None = None) -> None:
+    generate_asset(store, provider, table, column, source_url)
+
+
+def generate_asset(store: Store, provider: LLMProvider, table: str, column: str | None = None,
+                   source_url: str | None = None) -> None:
+    """Generate (or regenerate) one column, or a whole table when `column` is None. Used by the UI and the API.
+
+    Recorded as its own scan so the LLM calls appear in the history and cost totals.
+    """
+    scan_id = store.start_scan(provider.name, provider.model)
+    conn = connectors.connect(source_url)
     try:
-        tables = harvest(conn)
-        profiles = {table: profile_table(conn, tables[table])}
+        tables = conn.harvest()
+        if table not in tables or (column and column not in {c.name for c in tables[table].columns}):
+            store.finish_scan(scan_id, "failed", {"error": "unknown asset"})
+            raise KeyError(f"{table}.{column}" if column else table)
+        t = tables[table]
+        profiles = {table: conn.profile_table(t)}
         existing = {i["key"]: i["payload"].get("synonyms", []) for i in store.items("glossary")}
         resolver = glossary.Resolver(existing)
-        out = generate_table(tables[table], profiles[table], Gateway(provider, store, scan_id), sorted(existing), sorted(tables))
-        store.delete("column", f"{table}.{column}")
-        _column_item(store, tables[table].col(column), profiles[table][column], out, resolver, scan_id)
+        gw = Gateway(provider, store, scan_id)
+        kinds: dict = {}
+        process_table(store, gw, tables, profiles, t, resolver, 1, scan_id, kinds,
+                      force_cols={column} if column else {c.name for c in t.columns})
         glossary.build_terms(store, scan_id)
+        store.finish_scan(scan_id, "done", {"asset": f"{table}.{column}" if column else table, **store.call_totals(scan_id)})
     finally:
         conn.close()

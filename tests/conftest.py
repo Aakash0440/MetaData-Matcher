@@ -23,9 +23,9 @@ def mk_prof(values=None, rows=100, distinct=None, **kw) -> ColProfile:
 
 @pytest.fixture
 def pg():
-    from mm import db
+    from mm import connectors
     try:
-        conn = db.readonly_connect()
+        conn = connectors.connect()
     except Exception:
         pytest.skip("source PostgreSQL is not reachable (create it with the README steps)")
     yield conn

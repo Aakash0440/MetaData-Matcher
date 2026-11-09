@@ -1,11 +1,14 @@
 """Create the schema and load synthetic, FK-consistent data. Run: python seed_data.py
+(PostgreSQL by default; set MM_SOURCE_URL=mysql://user:pw@host:3306/db to seed MySQL or MariaDB instead.)
 
 Surrogate keys use a different range per table (like real systems). That is what lets value-overlap
 inference tell org ids from staff ids; see DESIGN.md for what happens when ranges overlap.
 """
 import datetime as dt
+import json
 import random
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import psycopg2
 from psycopg2.extras import Json, execute_values
@@ -68,12 +71,32 @@ def band(score: int) -> str:
 
 
 def main() -> None:
-    conn = psycopg2.connect(config.SOURCE_DSN)
-    cur = conn.cursor()
-    cur.execute((Path(__file__).parent / "schema.sql").read_text())
+    url = config.SOURCE_URL.strip()
+    mysql = url.lower().startswith(("mysql://", "mysql+pymysql://", "mariadb://"))
+    script = (Path(__file__).parent / "schema.sql").read_text()
+    if mysql:
+        import pymysql
+        u = urlparse(url.replace("mysql+pymysql://", "mysql://").replace("mariadb://", "mysql://"))
+        conn = pymysql.connect(host=u.hostname or "localhost", port=u.port or 3306, user=unquote(u.username or ""),
+                               password=unquote(u.password or ""), database=u.path.lstrip("/"), charset="utf8mb4")
+        cur = conn.cursor()
+        cur.execute("SET FOREIGN_KEY_CHECKS = 0")
+        for stmt in script.replace("JSONB", "JSON").replace("TIMESTAMP", "DATETIME").split(";"):
+            if stmt.strip():
+                cur.execute(stmt)
+        cur.execute("SET FOREIGN_KEY_CHECKS = 1")
+        J = json.dumps
+    else:
+        conn = psycopg2.connect(url or config.SOURCE_DSN)
+        cur = conn.cursor()
+        cur.execute(script)
+        J = Json
 
     def load(table, rows):
-        execute_values(cur, f"INSERT INTO {table} VALUES %s", rows)
+        if mysql:
+            cur.executemany(f"INSERT INTO {table} VALUES ({', '.join(['%s'] * len(rows[0]))})", rows)
+        else:
+            execute_values(cur, f"INSERT INTO {table} VALUES %s", rows)
         print(f"{table:9s} {len(rows):4d} rows")
 
     # org: 3 regional LAs (parents), 12 child LAs, 30 contractors (some subsidiaries), 5 assessor bodies
@@ -198,7 +221,7 @@ def main() -> None:
         act = random.choices(["INS", "UPD", "DEL"], [3, 6, 1])[0]
         aud.append((900001 + i, t, random.choice(pools[t]), act, random.choice([s[0] for s in stf]),
                     dt.datetime(2024, 1, 1) + dt.timedelta(minutes=random.randint(0, 1_500_000)),
-                    Json({"field": random.choice(["sts_cd", "cost_amt", "pymt_amt", "inst_dt"]), "old": "x", "new": "y"})))
+                    J({"field": random.choice(["sts_cd", "cost_amt", "pymt_amt", "inst_dt"]), "old": "x", "new": "y"})))
     load("aud_log", aud)
     conn.commit()
     conn.close()

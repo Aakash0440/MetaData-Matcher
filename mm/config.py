@@ -23,3 +23,16 @@ def band(conf: float, high: float | None = None, medium: float | None = None) ->
     high = HIGH if high is None else high
     medium = MEDIUM if medium is None else medium
     return "High" if conf >= high else "Medium" if conf >= medium else "Low"
+
+# Phase 1: tiers. When on, High-trust items are promoted to Gold without a human, Medium to Gold (flagged).
+# Off by default: the interview brief says only approved items are exported.
+AUTOPROMOTE = os.getenv("MM_AUTOPROMOTE", "0").lower() in ("1", "true", "yes")
+
+# Stage 3: which database to scan. Empty means PostgreSQL via MM_SOURCE_DSN (the original behaviour).
+#   postgresql://user:pw@host/db      or a key=value DSN
+#   mysql://user:pw@host:3306/db
+#   csv:///path/to/folder  (or a path to one .csv file)
+SOURCE_URL = os.getenv("MM_SOURCE_URL", "")
+
+# Stage 2: the API requires this key in the X-API-Key header. If unset, every protected endpoint answers 503.
+API_KEY = os.getenv("MM_API_KEY", "")

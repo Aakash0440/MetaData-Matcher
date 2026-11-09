@@ -1,0 +1,34 @@
+[theme]
+base = "light"
+primaryColor = "#2fbf9b"
+backgroundColor = "#eef3f1"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#17332c"
+font = "Plus Jakarta Sans"
+
+[[theme.fontFaces]]
+family = "Plus Jakarta Sans"
+url = "app/static/fonts/plus-jakarta-sans-latin-400-normal.woff2"
+weight = 400
+
+[[theme.fontFaces]]
+family = "Plus Jakarta Sans"
+url = "app/static/fonts/plus-jakarta-sans-latin-500-normal.woff2"
+weight = 500
+
+[[theme.fontFaces]]
+family = "Plus Jakarta Sans"
+url = "app/static/fonts/plus-jakarta-sans-latin-600-normal.woff2"
+weight = 600
+
+[[theme.fontFaces]]
+family = "Plus Jakarta Sans"
+url = "app/static/fonts/plus-jakarta-sans-latin-700-normal.woff2"
+weight = 700
+
+[server]
+headless = true
+enableStaticServing = true
+
+[client]
+toolbarMode = "minimal"

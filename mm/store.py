@@ -90,6 +90,10 @@ class Store:
             r = c.execute("SELECT data FROM evidence WHERE key=?", (key,)).fetchone()
         return json.loads(r["data"]) if r else {}
 
+    def evidence_like(self, prefix: str) -> dict:
+        with self._c() as c:
+            return {r["key"]: json.loads(r["data"]) for r in c.execute("SELECT key, data FROM evidence WHERE key LIKE ?", (prefix + "%",))}
+
     # items
     @staticmethod
     def _row(r) -> dict:
@@ -159,10 +163,11 @@ class Store:
             c.execute(f"DELETE FROM item WHERE kind IN ({','.join('?' * len(kinds))}) AND scan_id != ?",
                       (*kinds, scan_id))
 
-    def bulk_approve(self, min_conf: float, kinds: list[str] | None = None) -> int:
+    def bulk_approve(self, min_conf: float, kinds: list[str] | None = None, score=None) -> int:
+        """Approve Suggested items whose score is at least min_conf. `score(item)` defaults to confidence."""
         n = 0
         for it in self.items(status="suggested"):
-            if it["confidence"] >= min_conf and (not kinds or it["kind"] in kinds) and not (it["payload"] or {}).get("error"):
+            if (score(it) if score else it["confidence"]) >= min_conf and (not kinds or it["kind"] in kinds) and not (it["payload"] or {}).get("error"):
                 self.set_status(it["kind"], it["key"], "approved")
                 n += 1
         return n

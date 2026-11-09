@@ -18,3 +18,27 @@
 **Left out, and why.** The mock's confidence is optimistic because its names come from the same dictionary used to check them (circular); a real model does not have this problem. Approved relationships are not re-checked for drift on rescan. The glossary merges only near-exact names automatically (similarity 0.9); synonyms like "Given Name" need a steward merge. Metric filters apply to the measure table only. Relationship inference assumes integer surrogate keys with distinct ranges per table: if every table's ids run 1..N, value overlap cannot discriminate and name support has to carry the decision. No auth, no concurrency control on edits.
 
 **Next, given more time.** Re-validate approved items on rescan and flag drift; decode `ref_cd` into allowed values per `*_cd` column; embeddings for glossary matching; evaluation set with precision/recall for LLM output.
+
+## Phase 1, Stage 1: tiers and trust
+
+Bronze is harvested facts (catalogue and profile). Silver is AI-generated metadata with a score. Gold is approved by a person, or auto-promoted by trust when `MM_AUTOPROMOTE` is on.
+The trust score blends five checks: data match 0.35, lineage 0.20, glossary fit 0.15, model consistency 0.15, human approval 0.15. A check that does not apply is left out and the weights renormalise.
+`confidence` (evidence at generation time) is kept as the base signal and feeds data match and lineage. Trust adds glossary fit and human sign-off, and drives tiers and the future API.
+Tier is computed on demand from status and trust, so approving an item moves it up immediately and nothing needs migrating. Items whose AI output failed validation fall back to Bronze.
+Auto-promotion is off by default because the brief says only approved items are exported.
+
+## Phase 1, Stages 2 to 4
+
+**Connectors.** One `Connector` interface gives the scanner a catalogue (`harvest`), column profiles, read-only execution with a 5 second timeout, and a `Dialect`
+(identifier quoting, text cast, IN lists, ordering). Everything above it (validation, trust, relationships, metrics) is database-neutral.
+PostgreSQL reads `pg_catalog`; MySQL reads `information_schema` and treats `tinyint(1)` as boolean; CSV files are loaded into in-memory SQLite.
+CSV files declare neither types nor keys, so types are inferred from every value (INTEGER, NUMERIC, BOOLEAN, DATE, TIMESTAMP, else TEXT; values with leading zeros stay text)
+and a primary key is inferred per table (`id`, `<table>_id`, any unique non-null `*_id`, else a unique first column). Without keys, relationship inference finds nothing.
+Metric SQL uses only portable constructs, so the same specs run on all three.
+
+**API.** FastAPI over the same store. It returns what the UI shows: tier, flagged, status, source and the five trust checks. Auth is a shared key in `X-API-Key`
+compared in constant time; with no key configured the API refuses everything (503). `generate` returns a stored item without an LLM call and only calls the LLM for a missing asset
+or when `refresh` is set, so repeated calls do not cost money. The API cannot be pointed at another database, to avoid it becoming a way to probe networks.
+
+**UI.** Light theme. Browse merges the table list, columns and column detail into one view. Tiers shows the three lanes with the trust checks as bars.
+Sources tests a connection and runs Bronze or a full scan. Badges can show Trust (default) or the original Confidence.

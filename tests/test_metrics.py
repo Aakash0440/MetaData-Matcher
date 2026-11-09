@@ -69,15 +69,13 @@ def test_delta_template_compiles_per_partition_first_and_last():
                                      "partition_by": {"table": "epc", "column": "prop_id"},
                                      "dimensions": [{"name": "LA", "table": "org", "column": "org_nm"}]})
     c = M.compile_metric(d, t, RELS + [rel("epc", "prop_id", "prop", "prop_id")])
-    assert not c.errors and "array_agg" in c.sql_total and 'AVG(m."delta")' in c.sql_total and c.sql_dims.count("JOIN") == 2
+    assert not c.errors and "ROW_NUMBER" in c.sql_total and 'AVG(m."delta")' in c.sql_total and c.sql_dims.count("JOIN") == 2
 
 
 def catalog(pg):
-    from mm.harvest import harvest
-    from mm.profile import profile_table
     from mm.relationships import declared_relationships, infer_relationships
-    tables = harvest(pg)
-    profs = {n: profile_table(pg, t) for n, t in tables.items()}
+    tables = pg.harvest()
+    profs = {n: pg.profile_table(t) for n, t in tables.items()}
     rels = declared_relationships(tables, profs) + infer_relationships(tables, profs)
     return tables, [{**r.payload(), "confidence": r.confidence} for r in rels]
 

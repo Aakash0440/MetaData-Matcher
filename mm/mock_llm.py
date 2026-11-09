@@ -33,21 +33,21 @@ CRYPTIC = {"act", "sts", "typ", "rsn", "pyee", "cd", "sub", "dcsn", "sz", "tpy",
 
 def _semantic_type(col: str, dtype: str) -> str:
     t, d = set(tokens(col)), dtype.lower()
-    if "json" in d:
+    if "json" in d or "json" in t:
         return "json"
     if d.startswith("bool"):
         return "flag"
     if d == "date":
         return "date"
-    if d.startswith("timestamp"):
+    if d.startswith(("timestamp", "datetime")):
         return "timestamp"
-    if t & {"fst", "lst"} or col in ("org_nm", "schm_nm"):
+    if t & {"fst", "lst"} or col in ("org_nm", "schm_nm") or ("name" in t and d != "date"):
         return "name"
-    if t & {"email", "ph"}:
+    if t & {"email", "ph", "phone"}:
         return "contact"
     if t & {"addr", "pcode", "twn", "uprn"}:
         return "address"
-    if t & {"amt", "cost"}:
+    if t & {"amt", "cost", "price", "amount"}:
         return "money_gbp"
     if "yr" in t:
         return "year"
@@ -63,18 +63,20 @@ def _semantic_type(col: str, dtype: str) -> str:
         return "identifier"
     if tokens(col)[-1] in ("id", "nino", "ref"):
         return "identifier"
-    if t & {"cd", "typ", "band", "act", "src", "nm"}:
+    if t & {"cd", "typ", "band", "act", "src", "nm", "status", "category"}:
         return "code"
-    return "code" if d.startswith("character") else "measure"
+    if "char" in d or d.endswith("text"):
+        return "code" if d.startswith("character") else "free_text"
+    return "measure"
 
 
 def _pii(col: str) -> str:
     t = set(tokens(col))
-    if t & {"fst", "lst", "nino"}:
+    if t & {"fst", "lst", "nino"} or (t & {"first", "last"} and "name" in t):
         return "direct_identifier"
     if "dob" in t:
         return "quasi_identifier"
-    if t & {"email", "ph"}:
+    if t & {"email", "ph", "phone"}:
         return "contact"
     if t & {"addr", "pcode", "twn", "uprn"}:
         return "address"
@@ -132,6 +134,21 @@ METRICS = [
 ]
 
 
+def generic_metrics(tables: dict) -> list:
+    """For databases other than the grants example: a row count per table, plus a total of the first money-like column."""
+    out = [{"name": f"{title(t)} count", "description": f"Number of rows in {t}.", "template": "aggregate", "agg": "count",
+            "measure": {"table": t, "column": None}, "filters": [], "dimensions": [],
+            "reasoning": "A row count is always valid.", "self_confidence": 0.9} for t in list(tables)[:3]]
+    for t, cols in tables.items():
+        money = next((c.split(":")[0] for c in cols if c.endswith(":num")), None)
+        if money:
+            out.append({"name": f"Total {title(money).lower()} in {t}", "description": f"Sum of {money} across {t}.", "template": "aggregate",
+                        "agg": "sum", "measure": {"table": t, "column": money}, "filters": [], "dimensions": [],
+                        "reasoning": "Numeric column suitable for a total.", "self_confidence": 0.8})
+            break
+    return out
+
+
 class MockProvider(LLMProvider):
     name, model = "mock", "mock-heuristic-v1"
 
@@ -141,7 +158,9 @@ class MockProvider(LLMProvider):
     def complete(self, *, purpose, system, prompt, temperature=0.0) -> LLMResult:
         t0 = time.time()
         ctx = json.loads(re.search(r"<context>(.*)</context>", prompt, re.S).group(1))
-        if purpose == "metrics":
+        if purpose == "metrics" and not {"pymt", "app", "msr", "epc_cert"} <= set(ctx["tables"]):
+            out = {"metrics": generic_metrics(ctx["tables"])}
+        elif purpose == "metrics":
             metrics = json.loads(json.dumps(METRICS))
             if "ambiguous path" in prompt:       # a real LLM reads the validator feedback and adds the path
                 for m in metrics:

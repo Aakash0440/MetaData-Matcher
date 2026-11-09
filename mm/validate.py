@@ -13,7 +13,7 @@ ALLOWED = {
     "identifier": {"int", "text"}, "code": {"text", "int"}, "date": {"date"}, "timestamp": {"ts"},
     "money_gbp": {"num"}, "measure": {"num", "int"}, "score": {"int", "num"}, "count": {"int"},
     "flag": {"bool"}, "name": {"text"}, "free_text": {"text"}, "address": {"text", "int"},
-    "contact": {"text"}, "json": {"json"}, "year": {"int"},
+    "contact": {"text"}, "json": {"json", "text"}, "year": {"int"},
 }
 
 

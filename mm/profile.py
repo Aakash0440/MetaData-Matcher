@@ -4,8 +4,6 @@ import decimal
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 
-from psycopg2 import sql
-
 from mm import masking
 from mm.harvest import Table
 
@@ -77,37 +75,34 @@ def describe_pattern(values: list[str]) -> tuple[str, float, float]:
     return f"variable length {min(lens)}-{max(lens)} chars, mostly {cls}", k / len(values), avg
 
 
-def profile_table(conn, t: Table) -> dict[str, ColProfile]:
-    cur = conn.cursor()
+def profile_table(cx, t: Table) -> dict[str, ColProfile]:
+    """Profile every column using the connector's dialect (works on PostgreSQL, MySQL and SQLite)."""
+    d = cx.dialect
+    tbl = d.q(t.name)
     out: dict[str, ColProfile] = {}
     for c in t.columns:
-        ident, tbl = sql.Identifier(c.name), sql.Identifier(t.name)
+        col = d.q(c.name)
+        txt = d.text(col)
         p = ColProfile(rows=t.row_count)
         rangeable = c.family in ("int", "num", "date", "ts")
-        agg = sql.SQL("SELECT count({c}), count(DISTINCT {c}::text){r} FROM {t}").format(
-            c=ident, t=tbl,
-            r=sql.SQL(", min({c}), max({c})").format(c=ident) if rangeable else sql.SQL(""))
-        cur.execute(agg)
-        row = cur.fetchone()
+        extra = f", MIN({col}), MAX({col})" if rangeable else ""
+        row = cx.fetchall(f"SELECT COUNT({col}), COUNT(DISTINCT {txt}){extra} FROM {tbl}")[0]
         p.nulls = t.row_count - row[0]
         p.null_pct = round(100 * p.nulls / t.row_count, 1) if t.row_count else 0.0
         p.distinct = row[1]
         if rangeable:
             p.min, p.max = _jsonable(row[2]), _jsonable(row[3])
-        cur.execute(sql.SQL("SELECT {c}::text FROM {t} WHERE {c} IS NOT NULL LIMIT 1000").format(c=ident, t=tbl))
-        raw = [r[0] for r in cur.fetchall()]
+        raw = [r[0] for r in cx.fetchall(f"SELECT {txt} FROM {tbl} WHERE {col} IS NOT NULL LIMIT 1000")]
         p.pattern_desc, p.pattern_match_pct, p.avg_len = describe_pattern(raw)
-        cur.execute(sql.SQL("SELECT {c}::text FROM {t} WHERE {c} IS NOT NULL GROUP BY 1 "
-                            "ORDER BY count(*) DESC, 1 LIMIT 5").format(c=ident, t=tbl))
+        top = cx.fetchall(f"SELECT {txt} FROM {tbl} WHERE {col} IS NOT NULL GROUP BY 1 ORDER BY COUNT(*) DESC, 1 LIMIT 5")
         rule = masking.detect(c.name, raw)
-        p.samples = masking.safe_samples([r[0] for r in cur.fetchall()], rule)
+        p.samples = masking.safe_samples([r[0] for r in top], rule)
         p.pii_category, p.pii_personal, p.pii_reason = rule.category, rule.personal, rule.reason
         p.pii_value_based, p.pii_fraction = rule.value_based, rule.fraction
         if rule.personal:                       # never expose ranges of personal data
             p.min = p.max = None
         if c.family == "int" or (c.family == "text" and 0 < p.distinct <= 50 and not rule.personal):
-            cur.execute(sql.SQL("SELECT DISTINCT {c}::text FROM {t} WHERE {c} IS NOT NULL").format(c=ident, t=tbl))
-            vals = [r[0] for r in cur.fetchall()]
-            p.values = {int(v) for v in vals} if c.family == "int" else set(vals)
+            vals = [r[0] for r in cx.fetchall(f"SELECT DISTINCT {txt} FROM {tbl} WHERE {col} IS NOT NULL")]
+            p.values = {int(float(v)) for v in vals} if c.family == "int" else set(vals)
         out[c.name] = p
     return out
