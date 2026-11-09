@@ -1,6 +1,9 @@
 """Steward UI. Run: streamlit run app.py"""
 import html
 import json
+import re
+import shutil
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -373,8 +376,28 @@ def sources_page():
         st.write(f"Active source: **{connectors.safe_url(config.SOURCE_URL or config.SOURCE_DSN)}**")
         st.caption("Connectors: PostgreSQL, MySQL or MariaDB, and CSV files. Set MM_SOURCE_URL to change the default for every command.")
         st.markdown("Examples: `postgresql://user:pw@host/db` &nbsp;|&nbsp; `mysql://user:pw@host:3306/db` &nbsp;|&nbsp; `csv://sample_data/csv`")
-        default = config.SOURCE_URL or "csv://sample_data/csv"
-        url = st.text_input("Source URL (hidden while typing, not stored)", value=default, type="password")
+        up_dir = config.ROOT / "uploads"
+        st.subheader("Add CSV files")
+        files = st.file_uploader("Attach CSV files (each file becomes a table)", type=["csv"], accept_multiple_files=True,
+                                 key="csv_up")
+        if files and st.button("Save uploaded files"):
+            up_dir.mkdir(exist_ok=True)
+            for f in files:
+                name = re.sub(r"[^0-9A-Za-z_.-]+", "_", Path(f.name).name)
+                (up_dir / name).write_bytes(f.getvalue())
+            st.session_state["use_uploads"] = True
+            st.success(f"Saved {len(files)} file(s)")
+        have = sorted(up_dir.glob("*.csv")) if up_dir.exists() else []
+        if have:
+            st.write("Uploaded: " + ", ".join(f.name for f in have))
+            use = st.checkbox("Use uploaded CSVs as the source", key="use_uploads")
+            if st.button("Remove all uploaded files"):
+                shutil.rmtree(up_dir, ignore_errors=True)
+                st.session_state["use_uploads"] = False
+                st.rerun()
+        st.divider()
+        default = f"csv://{up_dir}" if have and st.session_state.get("use_uploads") else (config.SOURCE_URL or "csv://sample_data/csv")
+        url = st.text_input("Source URL (hidden while typing, not stored)", value=default, type="password", key=f"src_url_{default}")
         c1, c2, c3 = st.columns(3)
         prov = st.selectbox("Provider for a full scan", ["mock", "bedrock", "anthropic"])
         if c1.button("Test connection"):
@@ -490,21 +513,47 @@ def graph_page():
         actions("relationship", sel, it)
 
 
+def _hl(text: str, words: list[str]) -> str:
+    """Escape, then wrap matches in <mark> (one pass, so tags are never matched)."""
+    if not words:
+        return esc(text)
+    rx = re.compile("(" + "|".join(re.escape(w) for w in sorted(set(words), key=len, reverse=True)) + ")", re.I)
+    return "".join(f"<mark>{esc(part)}</mark>" if i % 2 else esc(part) for i, part in enumerate(rx.split(text)))
+
+
 def glossary_page():
     ui_theme.head("Glossary")
     terms = store.items("glossary")
     if not terms:
-        st.info("No scan yet.")
+        st.info("No scan yet. Add a source in Sources and run a scan.")
         return
     with ui_theme.card():
-        rows = [[esc(t["key"]), esc(t["payload"]["definition"]), esc(", ".join(t["payload"]["columns"])),
+        q = st.text_input("Search glossary", key="gloss_q", placeholder="Search terms, definitions, columns, synonyms",
+                          label_visibility="collapsed")
+        words = [w for w in q.lower().split() if w]
+
+        def hay(t):
+            p = t["payload"]
+            return " ".join([t["key"], p["definition"], " ".join(p["columns"]), " ".join(p.get("synonyms", []))]).lower()
+
+        found = [t for t in terms if all(w in hay(t) for w in words)]
+        c1, c2 = st.columns([3, 1])
+        c1.caption(f"{len(found)} of {len(terms)} terms")
+        status_f = c2.selectbox("Status", ["all", "suggested", "approved", "edited", "rejected"], label_visibility="collapsed")
+        if status_f != "all":
+            found = [t for t in found if t["status"] == status_f]
+        rows = [[_hl(t["key"], words), _hl(t["payload"]["definition"], words), _hl(", ".join(t["payload"]["columns"]), words),
                  badge_for(t), chip(t["status"], STATUS)]
-                for t in sorted(terms, key=lambda t: (-len(t["payload"]["columns"]), t["key"]))]
-        table_html(["Term", "Definition", "Mapped columns", "Confidence", "Status"], rows)
+                for t in sorted(found, key=lambda t: (-len(t["payload"]["columns"]), t["key"]))]
+        if rows:
+            table_html(["Term", "Definition", "Mapped columns", "Confidence", "Status"], rows)
+        else:
+            st.caption("No matching terms.")
         dups = glossary.possible_duplicates(store)
-        if dups:
+        if dups and not words:
             st.subheader("Possible duplicates")
             st.write(", ".join(f"{a} / {b} ({r})" for a, b, r in dups[:15]))
+    terms = found or terms
     with ui_theme.card():
         st.subheader("Edit a term")
         sel = st.selectbox("Term", [t["key"] for t in terms])

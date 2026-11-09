@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metadata Matcher</title>
+<style>
+:root{--bg:#f7f8fa;--fg:#1a1d23;--card:#fff;--bd:#e2e5ea;--ac:#0f5c4a;--mut:#667}
+@media(prefers-color-scheme:dark){:root{--bg:#14161a;--fg:#e8eaee;--card:#1d2026;--bd:#2d3139;--ac:#2fbf9b;--mut:#9aa}}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{display:flex;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--card);flex-wrap:wrap}
+header b{margin-right:12px}nav button{border:0;background:none;padding:8px 12px;border-radius:6px;color:var(--fg);cursor:pointer;font:inherit}
+nav button.on{background:var(--ac);color:#fff}main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);vertical-align:top}th{color:var(--mut);font-weight:600;font-size:13px}
+.table-wrap{overflow-x:auto}input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+.drop{border:2px dashed var(--bd);border-radius:10px;padding:28px;text-align:center;cursor:pointer}.drop.over{border-color:var(--ac)}
+button.pri{background:var(--ac);color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit}
+.chip{display:inline-block;padding:1px 8px;border-radius:99px;background:var(--bd);font-size:12px;margin:1px}.pii{background:#fbdcd9;color:#9b1c12}
+.mut{color:var(--mut)}mark{background:#ffe38a;color:#000}.hide{display:none}
+</style></head><body>
+<header><b>◈ Metadata Matcher</b><nav id="nav"></nav></header>
+<main>
+<section id="p-sources"><div class="card">
+<h3 style="margin-top:0">Attach CSV files</h3>
+<div class="drop" id="drop">Drop CSV files here or click to choose<input id="file" type="file" accept=".csv,text/csv" multiple hidden></div>
+<p class="mut">Files are parsed in your browser. Nothing is uploaded. Each file becomes a table.</p>
+<button class="pri" id="sample">Load sample data</button> <button id="clear">Clear all</button> <span id="msg" class="mut"></span>
+</div><div class="card table-wrap"><table id="src"></table></div></section>
+<section id="p-glossary" class="hide"><div class="card">
+<input type="search" id="q" placeholder="Search terms, definitions, columns, synonyms">
+<p class="mut" id="count"></p></div><div class="card table-wrap"><table id="gl"></table></div></section>
+<section id="p-browse" class="hide"><div class="card table-wrap"><table id="br"></table></div></section>
+<section id="p-rel" class="hide"><div class="card table-wrap"><table id="rl"></table></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const PAGES={sources:"Sources",glossary:"Glossary",browse:"Browse",rel:"Relationships"};
+let tables={};// name -> {rows,cols:[{name,type,nulls,distinct,pii,term,bn,pk}],pk}
+const ACR={id:"identifier",dob:"date of birth",nino:"national insurance number",qty:"quantity",amt:"amount",addr:"address",tel:"telephone",ref:"reference",num:"number",dt:"date",ts:"timestamp"};
+const title=n=>n.split("_").map(w=>ACR[w]||w).join(" ").replace(/^./,c=>c.toUpperCase());
+const PII=[[/e.?mail/i,"email"],[/phone|mobile|tel/i,"phone"],[/ssn|nino|passport|national/i,"government_id"],[/first.?name|last.?name|full.?name|^name$|surname/i,"name"],[/address|postcode|zip/i,"address"],[/dob|birth/i,"date_of_birth"],[/iban|card|account.?no/i,"financial"]];
+const VPII=[[/^[^@\s]+@[^@\s]+\.\w+$/,"email"],[/^\+?[\d\s\-()]{9,15}$/,"phone"]];
+function parseCSV(t){const r=[];let row=[],f="",q=false;t=t.replace(/^\uFEFF/,"");
+for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+else if(c=='"')q=true;else if(c==","){row.push(f);f=""}else if(c=="\n"||c=="\r"){if(c=="\r"&&t[i+1]=="\n")i++;row.push(f);r.push(row);row=[];f=""}else f+=c}
+if(f!==""||row.length){row.push(f);r.push(row)}return r.filter(x=>x.some(v=>v.trim()!==""))}
+const clean=(s,used)=>{let n=s.trim().replace(/[^0-9a-zA-Z_]+/g,"_").replace(/^_+|_+$/g,"").toLowerCase()||"col";if(/^\d/.test(n))n="c_"+n;let b=n,i=2;while(used.has(n))n=b+"_"+i++;used.add(n);return n};
+const lz=v=>{const s=v.replace(/^[+-]/,"");return s.length>1&&s[0]=="0"&&!s.startsWith("0.")};
+function infer(vs){vs=vs.filter(v=>v!=null);if(!vs.length)return"text";
+if(vs.every(v=>/^[+-]?\d+$/.test(v)&&!lz(v)))return"integer";if(vs.every(v=>/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(v)&&!lz(v)))return"numeric";
+if(vs.every(v=>/^(true|false|yes|no|t|f|y|n)$/i.test(v)))return"boolean";if(vs.every(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))return"date";
+if(vs.every(v=>/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(v)))return"timestamp";return"text"}
+function addTable(fname,text){const rows=parseCSV(text);if(rows.length<1)return;const used=new Set(),head=rows[0].map(h=>clean(h,used));
+const body=rows.slice(1).map(r=>head.map((_,i)=>(r[i]??"").trim()===""?null:r[i].trim()));
+let tn=clean(fname.replace(/\.csv$/i,""),new Set(Object.keys(tables)));
+const cols=head.map((name,i)=>{const v=body.map(r=>r[i]),nn=v.filter(x=>x!=null),d=new Set(nn);
+const type=infer(v);let pii="none";for(const[re,c]of PII)if(re.test(name)){pii=c;break}
+if(pii=="none"&&type=="text")for(const[re,c]of VPII)if(nn.length&&nn.slice(0,200).every(x=>re.test(x))){pii=c;break}
+return{name,type,nulls:v.length-nn.length,distinct:d.size,unique:nn.length==v.length&&d.size==v.length&&v.length>0,pii,set:d,sample:nn.slice(0,3)}});
+const s=tn.replace(/s$/,"");let pk=["id",tn+"_id",s+"_id"].find(n=>cols.some(c=>c.name==n&&c.unique))||cols.find(c=>c.name.endsWith("_id")&&c.unique)?.name||(cols[0]?.unique?cols[0].name:null);
+if(Array.isArray(pk))pk=pk[0];
+cols.forEach(c=>{c.pk=c.name==pk;c.bn=title(c.name);c.term=c.bn.replace(/^(Customer|Order|Product)\s(?=\w)/,m=>m)});
+tables[tn]={rows:body.length,cols,pk}}
+function terms(){const m={};for(const[t,T]of Object.entries(tables))for(const c of T.cols){const k=c.pk?c.bn:c.bn;(m[k]??={term:k,defs:[],cols:[],pii:"none",types:new Set()});const e=m[k];e.cols.push(t+"."+c.name);e.types.add(c.type);if(c.pii!="none")e.pii=c.pii}
+return Object.values(m).map(e=>({...e,def:`${e.term}: ${[...e.types].join("/")} value${e.pii!="none"?" (personal data: "+e.pii+")":""} found in ${e.cols.length} column${e.cols.length>1?"s":""}.`,syn:e.cols.map(x=>x.split(".")[1]).filter((x,i,a)=>a.indexOf(x)==i)})).sort((a,b)=>b.cols.length-a.cols.length||a.term.localeCompare(b.term))}
+function rels(){const out=[];for(const[t,T]of Object.entries(tables))for(const c of T.cols){if(c.pk||!c.distinct||!c.set.size)continue;
+for(const[u,U]of Object.entries(tables)){if(u==t||!U.pk)continue;const p=U.cols.find(x=>x.name==U.pk);if(c.name!=U.pk&&!c.name.endsWith("_"+U.pk))continue;
+let hit=0;c.set.forEach(v=>{if(p.set.has(v))hit++});const ov=hit/c.set.size;if(ov>=.95)out.push([t+"."+c.name,u+"."+U.pk,ov])}}return out}
+function hl(s,q){s=esc(s);if(!q)return s;const re=new RegExp("("+q.split(/\s+/).filter(Boolean).map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")","gi");return s.replace(re,"<mark>$1</mark>")}
+function render(){const T=Object.entries(tables),n=T.length;
+$("#src").innerHTML="<tr><th>Table</th><th>Columns</th><th>Rows</th><th>Primary key</th><th></th></tr>"+(n?T.map(([t,x])=>`<tr><td>${esc(t)}</td><td>${x.cols.length}</td><td>${x.rows.toLocaleString()}</td><td>${esc(x.pk||"none")}</td><td><button data-rm="${esc(t)}">Remove</button></td></tr>`).join(""):'<tr><td class="mut">No sources yet.</td></tr>');
+const q=$("#q").value.trim().toLowerCase(),ws=q.split(/\s+/).filter(Boolean);
+const all=terms(),f=all.filter(t=>ws.every(w=>(t.term+" "+t.def+" "+t.cols.join(" ")+" "+t.syn.join(" ")).toLowerCase().includes(w)));
+$("#count").textContent=n?`${f.length} of ${all.length} terms`:"Attach CSV files in Sources to build the glossary.";
+$("#gl").innerHTML="<tr><th>Term</th><th>Definition</th><th>Mapped columns</th><th>Class</th></tr>"+f.map(t=>`<tr><td><b>${hl(t.term,q)}</b></td><td>${hl(t.def,q)}</td><td>${t.cols.map(c=>`<span class="chip">${hl(c,q)}</span>`).join("")}</td><td>${t.pii!="none"?'<span class="chip pii">personal data</span>':""}</td></tr>`).join("");
+$("#br").innerHTML="<tr><th>Table.column</th><th>Business name</th><th>Type</th><th>Nulls</th><th>Distinct</th><th>Sample</th><th>Flags</th></tr>"+T.flatMap(([t,x])=>x.cols.map(c=>`<tr><td>${esc(t)}.${esc(c.name)}</td><td>${esc(c.bn)}</td><td>${c.type}</td><td>${c.nulls}</td><td>${c.distinct}</td><td class="mut">${c.pii!="none"?"masked":esc(c.sample.join(", "))}</td><td>${c.pk?'<span class="chip">PK</span>':""}${c.pii!="none"?`<span class="chip pii">${c.pii}</span>`:""}</td></tr>`)).join("");
+const R=rels();$("#rl").innerHTML="<tr><th>From</th><th>To</th><th>Overlap</th></tr>"+(R.length?R.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${(r[2]*100).toFixed(0)}%</td></tr>`).join(""):'<tr><td class="mut">None inferred.</td></tr>');
+try{localStorage.setItem("mm-names",JSON.stringify(Object.keys(tables)))}catch(e){}}
+async function addFiles(fs){let ok=0,bad=[];for(const f of fs){try{if(f.size>25e6)throw 0;addTable(f.name,await f.text());ok++}catch(e){bad.push(f.name)}}
+$("#msg").textContent=`${ok} file(s) added`+(bad.length?`, failed: ${bad.join(", ")}`:"");render()}
+function show(p){for(const k in PAGES)$("#p-"+k).classList.toggle("hide",k!=p);document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.p==p));location.hash=p}
+$("#nav").innerHTML=Object.entries(PAGES).map(([k,v])=>`<button data-p="${k}">${v}</button>`).join("");
+$("#nav").onclick=e=>e.target.dataset.p&&show(e.target.dataset.p);
+$("#drop").onclick=()=>$("#file").click();$("#file").onchange=e=>{addFiles([...e.target.files]);e.target.value=""};
+["dragover","dragenter"].forEach(ev=>$("#drop").addEventListener(ev,e=>{e.preventDefault();$("#drop").classList.add("over")}));
+["dragleave","drop"].forEach(ev=>$("#drop").addEventListener(ev,e=>{e.preventDefault();$("#drop").classList.remove("over")}));
+$("#drop").addEventListener("drop",e=>addFiles([...e.dataTransfer.files].filter(f=>/\.csv$/i.test(f.name))));
+$("#clear").onclick=()=>{tables={};render()};$("#src").onclick=e=>{const t=e.target.dataset.rm;if(t){delete tables[t];render()}};
+$("#sample").onclick=async()=>{for(const n of["customers","orders","products"]){const r=await fetch("sample/"+n+".csv");addTable(n+".csv",await r.text())}render();show("glossary")};
+$("#q").oninput=render;render();show(PAGES[location.hash.slice(1)]?location.hash.slice(1):"sources");
+</script></body></html>
