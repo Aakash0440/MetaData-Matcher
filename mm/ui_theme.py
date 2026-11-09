@@ -78,7 +78,7 @@ hr {{ border-color:#e4ece9; }}
 .lane-head .n {{ background:#f0f5f3; border-radius:99px; padding:2px 12px; font-weight:700; font-size:.82rem; }}
 
 /* new components */
-.ring-wrap {{ display:flex; align-items:center; gap:14px; }}
+.ring-wrap {{ display:flex; align-items:center; justify-content:center; gap:16px; padding:18px 0 0 0; }}
 .ring-label {{ color:{MUTED}; font-size:.8rem; }}
 .ring-val {{ font-size:1.5rem; font-weight:700; line-height:1.1; }}
 .hero {{ background:{TEAL_SOFT}; border-radius:20px; padding:22px 24px; }}
@@ -106,10 +106,13 @@ h2, h3 {{ font-size:1.08rem !important; margin:0 0 .4rem 0 !important; padding:.
 [class*="st-key-card"] {{ padding:12px 16px; }}
 
 .st-key-topnav {{ position:sticky; top:0; z-index:100; background:#eef3f1; padding:14px 0 10px 0; }}
-.st-key-topnav > [data-testid="stVerticalBlock"] {{ background:#fff; border-radius:20px; padding:8px 14px; gap:0;
+.st-key-topnav > [data-testid="stVerticalBlock"] {{ background:#fff; border-radius:22px; padding:10px 22px; gap:0;
   box-shadow:0 1px 3px rgba(23,51,44,.06); }}
-.brand {{ font-weight:700; font-size:1.05rem; color:{TEAL}; white-space:nowrap; }}
-.st-key-navlinks [data-testid="stHorizontalBlock"] {{ gap:.25rem; flex-wrap:nowrap; }}
+.logo {{ width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg,#43d6b0,#1c9f80);
+  color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.35rem; line-height:1;
+  box-shadow:0 3px 10px rgba(47,191,155,.4); cursor:default; }}
+.st-key-navlinks {{ padding:0 14px; }}
+.st-key-navlinks [data-testid="stHorizontalBlock"] {{ gap:.5rem; flex-wrap:nowrap; }}
 .st-key-navlinks [data-testid="stColumn"] {{ min-width:0 !important; flex:1 1 0 !important; width:auto !important; }}
 .st-key-navlinks .stButton>button {{ border:none; background:transparent; color:{MUTED}; font-weight:600; font-size:.88rem;
   padding:.45rem .3rem; border-radius:12px; width:100%; white-space:nowrap; }}
@@ -147,10 +150,13 @@ def ring(pct: float, label: str, sub: str = "", color: str = TEAL, size: int = 7
     """Donut progress ring (SVG) with label, like the leave tiles in the reference."""
     r, circ = 15.9155, 100
     pct = max(0.0, min(100.0, pct))
-    svg = (f'<svg width="{size}" height="{size}" viewBox="0 0 36 36">'
+    arc = ""
+    if pct >= 1:  # a 0% ring shows only the track, no stray dot
+        arc = (f'<circle cx="18" cy="18" r="{r}" fill="none" stroke="{color}" stroke-width="3.4" stroke-linecap="round" '
+               f'stroke-dasharray="{min(pct, 99.6) * circ / 100:.1f} {circ}" transform="rotate(-90 18 18)"/>')
+    svg = (f'<svg width="{size}" height="{size}" viewBox="-1 -1 38 38" style="flex:none">'
            f'<circle cx="18" cy="18" r="{r}" fill="none" stroke="#e4ece9" stroke-width="3.4"/>'
-           f'<circle cx="18" cy="18" r="{r}" fill="none" stroke="{color}" stroke-width="3.4" stroke-linecap="round" '
-           f'stroke-dasharray="{pct * circ / 100:.1f} {circ}" transform="rotate(-90 18 18)"/>'
+           + arc +
            f'<text x="18" y="20.5" text-anchor="middle" font-size="7.5" font-weight="700" fill="{INK}">{pct:.0f}%</text></svg>')
     return (f'<div class="ring-wrap">{svg}<div><div class="ring-label">{html.escape(label)}</div>'
             f'<div class="small">{html.escape(sub)}</div></div></div>')

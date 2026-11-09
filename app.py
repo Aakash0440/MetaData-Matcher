@@ -73,8 +73,8 @@ def navbar() -> None:
     global HI, MED, SCORE_MODE
     n_open = len(store.items(status="suggested"))
     with ui_theme.kcontainer("topnav"):
-        brand, links, tools = st.columns([1.55, 7.4, 3.3], vertical_alignment="center")
-        brand.markdown('<div class="brand">◈ Semantic model</div>', unsafe_allow_html=True)
+        brand, links, tools = st.columns([0.5, 8.3, 3.5], vertical_alignment="center")
+        brand.markdown('<div class="logo" title="Semantic model">&amp;</div>', unsafe_allow_html=True)
         with links:
             with ui_theme.kcontainer("navlinks"):
                 for col, p in zip(st.columns([1.1, 1, 0.9, 1.45, 0.9, 1.1, 1.05, 1.05]), PAGES):
@@ -154,7 +154,7 @@ def overview():
                         unsafe_allow_html=True)
             st.button("Open review queue", on_click=goto, args=("Review queue",), type="primary")
     with ui_theme.card(r1, height=136):
-        st.markdown(ui_theme.ring(pct_done, "Approved", f"{done} of {len(items)} items signed off"), unsafe_allow_html=True)
+        st.markdown(ui_theme.ring(pct_done, "Approved", f"{done} of {len(items)} signed off"), unsafe_allow_html=True)
     with ui_theme.card(r2, height=136):
         st.markdown(ui_theme.ring(100 * tc["gold"] / n, "Gold (trusted)", f"{tc['gold']} items"), unsafe_allow_html=True)
     with ui_theme.card(r3, height=136):
@@ -410,11 +410,11 @@ def review_page():
     _all = store.items()
     _low = sum(1 for i in open_items if conf_level(score_of(i)) == "Low")
     q1, q2, q3 = st.columns(3)
-    with ui_theme.card(q1):
+    with ui_theme.card(q1, height=136):
         st.markdown(ui_theme.ring(100 * len(open_items) / (len(_all) or 1), "Awaiting review", f"{len(open_items)} items"), unsafe_allow_html=True)
-    with ui_theme.card(q2):
+    with ui_theme.card(q2, height=136):
         st.markdown(ui_theme.ring(100 * _low / (len(open_items) or 1), "Low confidence", f"{_low} need a look", color="#e5604f"), unsafe_allow_html=True)
-    with ui_theme.card(q3):
+    with ui_theme.card(q3, height=136):
         st.markdown(ui_theme.ring(100 - 100 * len(open_items) / (len(_all) or 1), "Done", f"{len(_all) - len(open_items)} reviewed"), unsafe_allow_html=True)
     with ui_theme.card():
         kinds = st.multiselect("Item types", ["table", "column", "relationship", "glossary", "metric"],
