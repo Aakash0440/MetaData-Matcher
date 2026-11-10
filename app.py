@@ -1,5 +1,6 @@
 """Steward UI. Run: streamlit run app.py"""
 import html
+import os
 import json
 import re
 import shutil
@@ -54,6 +55,21 @@ def esc(x) -> str:
 def latest_scan() -> int:
     s = store.scans()
     return s[0]["id"] if s else 0
+
+
+def active_conn():
+    """Connector for the source last scanned in this session; else the default source.
+    If the default Postgres is unreachable (e.g. Streamlit Cloud) fall back to uploaded or sample CSVs."""
+    url = st.session_state.get("active_url") or None
+    try:
+        return connectors.connect(url)
+    except Exception:
+        if url:
+            raise
+        up = config.ROOT / "uploads"
+        folder = up if up.exists() and any(up.glob("*.csv")) else config.ROOT / "sample_data" / "csv"
+        st.session_state["fallback_note"] = folder.name
+        return connectors.connect(f"csv://{folder}")
 
 
 def goto(page: str, **ctx) -> None:
@@ -414,6 +430,9 @@ def sources_page():
             try:
                 with st.spinner("Harvesting and profiling ..."):
                     s = pipeline.harvest_only(store, log=lambda *_: None, source_url=url)
+                if url.lower().startswith("csv://") or os.path.exists(url):
+                    st.session_state["active_url"] = url
+                    st.session_state.pop("catalog", None)
                 st.success(f"Bronze done: {s}")
             except Exception as e:
                 st.error(f"Failed: {str(e)[:300]}")
@@ -421,10 +440,13 @@ def sources_page():
             try:
                 with st.spinner("Scanning ..."):
                     s = pipeline.scan(store, make_provider(prov), 1, log=lambda *_: None, source_url=url)
+                if url.lower().startswith("csv://") or os.path.exists(url):
+                    st.session_state["active_url"] = url
+                    st.session_state.pop("catalog", None)
                 st.success(f"Scan done: {s}")
             except Exception as e:
                 st.error(f"Failed: {str(e)[:300]}")
-        st.caption("Metrics and the Regenerate button use the default source (MM_SOURCE_URL), so scan the default source when you want to run metrics.")
+        st.caption("Metrics use the last CSV source you scanned in this session (database URLs are never kept), else the default source.")
 
 
 def review_page():
@@ -575,13 +597,16 @@ def glossary_page():
 def metrics_page():
     ui_theme.head("Metrics")
     mets = store.items("metric")
+    st.session_state.pop("fallback_note", None)
     if st.button("Reload catalogue"):
         st.session_state.pop("catalog", None)
     if "catalog" not in st.session_state:
-        conn = connectors.connect()
+        conn = active_conn()
         st.session_state["catalog"] = conn.harvest()
         conn.close()
     tables = st.session_state["catalog"]
+    if st.session_state.get("fallback_note"):
+        st.caption(f"Default database unreachable; using CSV source `{st.session_state['fallback_note']}`.")
     rels = [{**i["payload"], "key": i["key"], "confidence": i["confidence"]} for i in store.items("relationship")
             if i["status"] != "rejected" and i["payload"]["kind"] in ("declared", "inferred") and i["payload"]["to_table"] != "*"]
     for it in mets:
@@ -595,7 +620,7 @@ def metrics_page():
                 dim_names = [d["name"] for d in p["spec"]["dimensions"]]
                 chosen = st.multiselect("Dimensions", dim_names, default=dim_names[:1], key=f"dims_{it['key']}")
                 spec = M.MetricSpec.model_validate(p["spec"])
-                conn = connectors.connect()
+                conn = active_conn()
                 comp = M.compile_metric(spec, tables, rels, [d for d in spec.dimensions if d.name in chosen], dialect=conn.dialect)
                 try:
                     st.code(M.literal(conn, comp.sql_total, comp.params), language="sql")
@@ -619,7 +644,7 @@ def metrics_page():
                               "dimensions": [{"name": "Scheme", "table": "schm", "column": "schm_nm"}]}, indent=2)
         txt = st.text_area("Metric spec (JSON)", example, height=220)
         if st.button("Validate and add"):
-            conn = connectors.connect()
+            conn = active_conn()
             ok, msg = M.add_metric(store, conn, tables, rels, txt, latest_scan())
             conn.close()
             (st.success if ok else st.error)(msg)

@@ -1,3 +1,13 @@
+---
+title: Metadata Matcher
+emoji: 🧭
+colorFrom: green
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Mini Metadata Matcher
 
 Scans a database (PostgreSQL, MySQL/MariaDB or CSV files), uses an LLM to draft metadata, validates everything in code,

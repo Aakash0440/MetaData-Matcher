@@ -31,7 +31,7 @@ def test_every_screen_renders_in_both_score_modes(populated, mode):
         at.session_state["page"] = page
         at.run()
         if mode == "Confidence":
-            at.sidebar.radio[1].set_value("Confidence").run()
+            next(r for r in at.radio if r.label == "Score on badges").set_value("Confidence").run()
         assert not at.exception, f"{page} ({mode}): {[e.value[:200] for e in at.exception]}"
 
 
@@ -39,7 +39,7 @@ def test_sources_screen_connects_to_the_sample_csv_files(populated):
     at = AppTest.from_file(APP, default_timeout=90)
     at.session_state["page"] = "Sources"
     at.run()
-    at.text_input[0].set_value("csv://" + os.path.join(os.path.dirname(APP), "sample_data", "csv")).run()
+    next(t for t in at.text_input if t.label.startswith("Source URL")).set_value("csv://" + os.path.join(os.path.dirname(APP), "sample_data", "csv")).run()
     next(b for b in at.button if b.label == "Test connection").click().run()
     assert not at.exception and "3 tables" in at.success[0].value
 
